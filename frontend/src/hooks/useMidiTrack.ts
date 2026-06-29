@@ -73,8 +73,7 @@ export function useMidiTrack() {
     switchTrack();
 
     return () => { cancelled = true; };
-  // midiCache and gpFile are intentionally excluded — we only want to react to
-  // track/song identity changes, not cache updates.
+  // midiCache and gpFile intentionally excluded — only react to track/song identity changes.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTrackIndex, songId]);
 

@@ -1,15 +1,20 @@
-import { useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useStore } from '../store';
-import { usePlaybackLoop } from '../hooks/usePlaybackLoop';
-import { useMidiTrack } from '../hooks/useMidiTrack';
-import { GuitarNeck } from '../components/GuitarNeck';
-import { TabScroller } from '../components/TabScroller';
-import { PlaybackBar } from '../components/PlaybackBar';
-import { TrackSelector } from '../components/TrackSelector';
-import type { Note, SongData } from '../types';
+import { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useStore } from "../store";
+import { transportStop } from "../tone";
+import { usePlaybackLoop } from "../hooks/usePlaybackLoop";
+import { useMidiTrack } from "../hooks/useMidiTrack";
+import { GuitarNeck } from "../components/GuitarNeck";
+import { TabScroller } from "../components/TabScroller";
+import { PlaybackBar } from "../components/PlaybackBar";
+import { TrackSelector } from "../components/TrackSelector";
+import type { Note, SongData } from "../types";
 
-function getActiveNotes(song: SongData, currentTime: number, trackIndex: number): Note[] {
+function getActiveNotes(
+  song: SongData,
+  currentTime: number,
+  trackIndex: number,
+): Note[] {
   const track = song.tracks[trackIndex] ?? song.tracks[0];
   if (!track) return [];
   const active: Note[] = [];
@@ -37,14 +42,17 @@ export function SongPage() {
   const { isLoadingMidi } = useMidiTrack();
 
   useEffect(() => {
-    const state = location.state as { songData?: SongData; songId?: string } | null;
+    const state = location.state as {
+      songData?: SongData;
+      songId?: string;
+    } | null;
     if (state?.songData) {
       setSongData(state.songData);
       if (state.songId) setSongId(state.songId);
     } else {
-      navigate('/', { replace: true });
+      navigate("/", { replace: true });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!songData) return null;
@@ -52,10 +60,13 @@ export function SongPage() {
   const activeNotes = getActiveNotes(songData, currentTime, activeTrackIndex);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#0D0D0D', color: '#F0F0F0' }}>
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ background: "#0D0D0D", color: "#F0F0F0" }}
+    >
       <header
         className="px-8 py-5 flex items-center justify-between flex-shrink-0"
-        style={{ borderBottom: '1px solid #2E2E2E' }}
+        style={{ borderBottom: "1px solid #2E2E2E" }}
       >
         <div className="flex items-center gap-4">
           <div>
@@ -65,17 +76,21 @@ export function SongPage() {
             >
               {songData.title}
             </h1>
-            <p className="text-sm mt-0.5" style={{ color: '#6B6B6B' }}>
-              {songData.tempo} BPM &middot;{' '}
-              {songData.tracks.length} track{songData.tracks.length !== 1 ? 's' : ''}
+            <p className="text-sm mt-0.5" style={{ color: "#6B6B6B" }}>
+              {songData.tempo} BPM &middot; {songData.tracks.length} track
+              {songData.tracks.length !== 1 ? "s" : ""}
             </p>
           </div>
           <TrackSelector isLoading={isLoadingMidi} disabled={isLoadingMidi} />
         </div>
         <button
-          onClick={() => { clearSong(); navigate('/'); }}
+          onClick={() => {
+            transportStop();
+            clearSong();
+            navigate("/");
+          }}
           className="text-sm transition-colors hover:text-white"
-          style={{ color: '#6B6B6B' }}
+          style={{ color: "#6B6B6B" }}
         >
           ← Library
         </button>

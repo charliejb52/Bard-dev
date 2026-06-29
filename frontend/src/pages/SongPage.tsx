@@ -27,6 +27,7 @@ export function SongPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const setSongData = useStore((s) => s.setSongData);
+  const setSongId = useStore((s) => s.setSongId);
   const clearSong = useStore((s) => s.clearSong);
   const songData = useStore((s) => s.songData);
   const currentTime = useStore((s) => s.currentTime);
@@ -36,9 +37,10 @@ export function SongPage() {
   const { isLoadingMidi } = useMidiTrack();
 
   useEffect(() => {
-    const state = location.state as { songData?: SongData } | null;
+    const state = location.state as { songData?: SongData; songId?: string } | null;
     if (state?.songData) {
       setSongData(state.songData);
+      if (state.songId) setSongId(state.songId);
     } else {
       navigate('/', { replace: true });
     }

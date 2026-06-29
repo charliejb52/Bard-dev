@@ -318,7 +318,7 @@ export function HomePage() {
         await loadMidiIntoTone(midiBlob, 0, false);
       }
 
-      navigate('/song', { state: { songData } });
+      navigate('/song', { state: { songData, songId: song.id } });
     } catch (e) {
       console.error('Failed to load song:', e);
       setOpeningId(null);

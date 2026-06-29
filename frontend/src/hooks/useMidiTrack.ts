@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from '../store';
 import { loadSampler } from '../tone';
 import { loadMidiIntoTone } from '../utils/loadMidiIntoTone';
@@ -21,16 +21,7 @@ export function useMidiTrack() {
 
   const [isLoadingMidi, setIsLoadingMidi] = useState(false);
 
-  // Skip the effect on initial mount — MIDI for track 0 is already scheduled
-  // by useFileUpload / handleRowClick before we arrive here.
-  const isFirstRender = useRef(true);
-
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-
     // Snapshot playback state at the moment the track changes.
     // We intentionally do NOT include currentTime/isPlaying in the deps array
     // because they change every animation frame — we only want to react to
@@ -82,8 +73,10 @@ export function useMidiTrack() {
     switchTrack();
 
     return () => { cancelled = true; };
+  // midiCache and gpFile are intentionally excluded — we only want to react to
+  // track/song identity changes, not cache updates.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTrackIndex]);
+  }, [activeTrackIndex, songId]);
 
   return { isLoadingMidi };
 }

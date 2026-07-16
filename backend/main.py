@@ -174,7 +174,6 @@ async def list_songs(user_id: str = Depends(_require_user)):
                 "bends,hammer_ons,pull_offs,slides,vibratos,palm_mutes,"
                 "barre_chords,open_chords"
             )
-            .eq("user_id", user_id)
             .order("created_at", desc=True)
             .execute()
         )
@@ -267,3 +266,7 @@ async def get_song(song_id: str, user_id: str = Depends(_require_user)):
         raise
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
+    
+#@app.post("/measures/theory")
+#async def get_theory(measures: list, base_tempo: int):
+    

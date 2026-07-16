@@ -27,15 +27,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# ── Auth dependency ────────────────────────────────────────────────────────────
-
-def _require_user(authorization: str | None = Header(default=None)) -> str:
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing Authorization header")
-    return verify_token(authorization[len("Bearer "):])
-
-
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 async def _save_upload(file: UploadFile, suffix: str) -> str:
@@ -95,7 +86,7 @@ def _persist_song(song_data: dict, techniques: dict, user_id: str) -> None:
 # ── Endpoints ──────────────────────────────────────────────────────────────────
 
 @app.post("/parse")
-async def parse_endpoint(file: UploadFile, user_id: str = Depends(_require_user)):
+async def parse_endpoint(file: UploadFile):
     if not file.filename:
         raise HTTPException(status_code=400, detail="No filename provided.")
 
@@ -125,7 +116,7 @@ async def parse_endpoint(file: UploadFile, user_id: str = Depends(_require_user)
         os.unlink(tmp_path)
 
     try:
-        _persist_song(song_data, techniques, user_id)
+        _persist_song(song_data, techniques)
     except Exception as exc:
         print(f"Warning: DB write failed: {exc}")
 
@@ -133,7 +124,7 @@ async def parse_endpoint(file: UploadFile, user_id: str = Depends(_require_user)
 
 
 @app.post("/midi")
-async def midi_endpoint(file: UploadFile, track_index: int = 0, user_id: str = Depends(_require_user)):
+async def midi_endpoint(file: UploadFile, track_index: int = 0):
     if not file.filename:
         raise HTTPException(status_code=400, detail="No filename provided.")
 
@@ -164,7 +155,7 @@ async def midi_endpoint(file: UploadFile, track_index: int = 0, user_id: str = D
 
 
 @app.get("/songs")
-async def list_songs(user_id: str = Depends(_require_user)):
+async def list_songs():
     try:
         db = get_client()
         resp = (
@@ -183,7 +174,7 @@ async def list_songs(user_id: str = Depends(_require_user)):
 
 
 @app.get("/songs/{song_id}/midi")
-async def get_song_midi(song_id: str, track: int = 0, user_id: str = Depends(_require_user)):
+async def get_song_midi(song_id: str, track: int = 0):
     try:
         db = get_client()
 
@@ -196,8 +187,6 @@ async def get_song_midi(song_id: str, track: int = 0, user_id: str = Depends(_re
         if not song_resp.data:
             raise HTTPException(status_code=404, detail="Song not found")
         song_row = song_resp.data[0]
-        if song_row["user_id"] != user_id:
-            raise HTTPException(status_code=403, detail="Access denied")
         tempo_bpm = song_row["tempo"] or 120
 
         track_resp = (
@@ -223,7 +212,7 @@ async def get_song_midi(song_id: str, track: int = 0, user_id: str = Depends(_re
 
 
 @app.get("/songs/{song_id}")
-async def get_song(song_id: str, user_id: str = Depends(_require_user)):
+async def get_song(song_id: str):
     try:
         db = get_client()
 
@@ -236,8 +225,6 @@ async def get_song(song_id: str, user_id: str = Depends(_require_user)):
         if not song_resp.data:
             raise HTTPException(status_code=404, detail="Song not found")
         song_row = song_resp.data[0]
-        if song_row["user_id"] != user_id:
-            raise HTTPException(status_code=403, detail="Access denied")
 
         tracks_resp = (
             db.table("tracks")

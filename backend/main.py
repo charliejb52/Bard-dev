@@ -51,7 +51,7 @@ def _compute_duration(song_data: dict) -> float:
     return round(end, 3)
 
 
-def _persist_song(song_data: dict, techniques: dict, user_id: str) -> None:
+def _persist_song(song_data: dict, techniques: dict) -> None:
     db = get_client()
     duration = _compute_duration(song_data)
 
@@ -63,7 +63,6 @@ def _persist_song(song_data: dict, techniques: dict, user_id: str) -> None:
             "tempo": song_data["tempo"],
             "duration": duration,
             "track_count": len(song_data["tracks"]),
-            "user_id": user_id,
             **techniques,
         })
         .execute()

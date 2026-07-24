@@ -12,6 +12,7 @@ from fastapi.responses import Response
 import guitarpro
 
 from analysis.techniques import extract_techniques
+from analysis.scale_agent import scale_agent_graph
 from db.client import get_client, verify_token
 from midi_gen import generate_midi_bytes, generate_midi_from_song_data
 from parser import parse_gp_song
@@ -152,6 +153,17 @@ async def midi_endpoint(file: UploadFile, track_index: int = 0):
     finally:
         os.unlink(tmp_path)
 
+@app.post("/measures/scale")
+async def scale_endpoint(measures: list):
+    if not measures:
+        raise HTTPException(status_code=403, detail="No measures provided.")
+    
+    scale_agent = scale_agent_graph()
+    response = scale_agent.invoke({"measures": measures, "scale": ""})
+
+    return response.scale
+    
+
 
 @app.get("/songs")
 async def list_songs():
@@ -179,7 +191,7 @@ async def get_song_midi(song_id: str, track: int = 0):
 
         song_resp = (
             db.table("songs")
-            .select("tempo,user_id")
+            .select("tempo")
             .eq("id", song_id)
             .execute()
         )
@@ -252,6 +264,8 @@ async def get_song(song_id: str):
         raise
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
+    
+
     
 #@app.post("/measures/theory")
 #async def get_theory(measures: list, base_tempo: int):
